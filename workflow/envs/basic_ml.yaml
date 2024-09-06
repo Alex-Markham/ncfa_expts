@@ -1,0 +1,4 @@
+name: basic_ml
+dependencies:
+  - pandas
+  - scikit-learn
