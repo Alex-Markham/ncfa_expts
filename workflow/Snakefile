@@ -49,7 +49,7 @@ rule fit_and_eval_ncfa:
         true_biadj=rules.true_biadj.output,
         true_params=rules.true_params.output,
     output:
-        weights="results/est_params/method={method}/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}__weights.csv",  # change to json file with all three
+        weights="results/est_params/method={method}/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_weights.csv",  # change to json file with all three
         errors="results/est_params/method={method}/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_errors.csv",
         means="results/est_params/method={method}/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_means.csv",
         eval="results/eval/method={method}/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_eval.csv",

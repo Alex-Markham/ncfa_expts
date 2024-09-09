@@ -22,11 +22,12 @@ def draw_heatmap(*args, **kwargs):
         d, cbar=False, square=True, annot=True, annot_kws={"size": 5}, **kwargs
     )
     h.invert_yaxis()
-    x = best_mu + 0.5 if best_mu > 0.5 else best_mu
-    y = best_lambda + 0.5 if best_lambda > 0.5 else best_lambda
+    c = d.columns
+    best_mu_idx = np.argwhere(c == best_mu)[0][0]
+    best_lambda_idx = np.argwhere(c == best_lambda)[0][0]
     h.add_patch(
         Rectangle(
-            (x, y),
+            (best_mu_idx, best_lambda_idx),
             1,
             1,
             fill=False,
