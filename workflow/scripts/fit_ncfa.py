@@ -2,10 +2,12 @@ from medil.evaluate import sfd
 from medil.models import NeuroCausalFactorAnalysis
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import KFold
 import torch
 
 
 # input
+k = 10
 threshold = 0.5
 dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
 true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
@@ -29,7 +31,8 @@ ncfa = NeuroCausalFactorAnalysis()
 ncfa.hyperparams["mu"] = mu
 ncfa.hyperparams["lambda"] = llambda
 
-ncfa.fit(dataset)
+no_split = (range(len(dataset)), [0, 1])
+ncfa.fit(dataset, no_split)
 
 biadj = ncfa.parameters.weights
 
@@ -37,10 +40,25 @@ biadj = ncfa.parameters.weights
 biadj_zero_pattern = (np.abs(biadj) > threshold).astype(int)
 sfd_value, ushd_value = sfd(biadj_zero_pattern, true_biadj)
 
+kf = KFold(
+    n_splits=k,
+    shuffle=True,
+    random_state=seed,
+)
+# k-folds cross validation
+cv_losses = np.empty(k, float)
+for idx, split_idcs in enumerate(kf.split(dataset)):
+    split_ncfa = NeuroCausalFactorAnalysis()
+    split_ncfa.hyperparams["mu"] = mu
+    split_ncfa.hyperparams["lambda"] = llambda
+    split_ncfa.fit(dataset, split_idcs)
+    cv_losses[idx] = ncfa.loss["elbo_valid"][-1]
+
+
 # output
 eval_df = pd.DataFrame(
     {
-        "elbo validation": ncfa.loss["elbo_valid"][-1],
+        "elbo cross validation": cv_losses.mean(),
         "recon loss": ncfa.loss["recon_train"][-1],
         "sfd": [sfd_value],
         "Graph": [snakemake.wildcards["idx"]],

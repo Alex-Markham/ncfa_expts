@@ -13,7 +13,7 @@ side_length = p2 - p1
 # heatmap drawer for facetgrid
 def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
-    best_row = data.iloc[data["elbo validation"].argmin()]
+    best_row = data.iloc[data["elbo cross validation"].argmin()]
     best_mu = best_row[r"$\mu$"]
     best_lambda = best_row[r"$\lambda$"]
     data = data.round({r"$\lambda$": 2, r"$\mu$": 2})
