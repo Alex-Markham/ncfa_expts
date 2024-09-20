@@ -40,7 +40,8 @@ sfd_value, ushd_value = sfd(biadj_zero_pattern, true_biadj)
 # output
 eval_df = pd.DataFrame(
     {
-        "elbo validation": ncfa.loss["elbo_valid"],
+        "elbo validation": ncfa.loss["elbo_valid"][-1],
+        "recon loss": ncfa.loss["recon_train"][-1],
         "sfd": [sfd_value],
         "Graph": [snakemake.wildcards["idx"]],
         r"$\lambda$": [llambda],

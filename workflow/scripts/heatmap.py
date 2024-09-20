@@ -13,7 +13,7 @@ side_length = p2 - p1
 # heatmap drawer for facetgrid
 def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
-    best_row = data.iloc[data["cross validation loss"].argmin()]
+    best_row = data.iloc[data["elbo validation"].argmin()]
     best_mu = best_row[r"$\mu$"]
     best_lambda = best_row[r"$\lambda$"]
     data = data.round({r"$\lambda$": 2, r"$\mu$": 2})
@@ -37,14 +37,12 @@ def draw_heatmap(*args, **kwargs):
     )
 
 
-## MLE
-mle_df = plot_data[plot_data["method"] == "mle"]
+## plot
+sfd_df = plot_data.rename(columns={"sfd": "loss"})
+sfd_df["loss type"] = "SFD"
 
-sfd_df = pd.DataFrame(mle_df).rename(columns={"sfd": "loss"})
-sfd_df["loss type"] = "sfd"
-
-l2_df = pd.DataFrame(mle_df).rename(columns={"$l_2$": "loss"})
-l2_df["loss type"] = "$l_2$"
+l2_df = plot_data.rename(columns={"recon loss": "loss"})
+l2_df["loss type"] = "recon train"
 
 mle_df = pd.concat([sfd_df, l2_df]).round({r"$\lambda$": 2, r"$\mu$": 2})
 
@@ -52,31 +50,10 @@ m = sns.FacetGrid(mle_df, row="Graph", col="loss type", margin_titles=True)
 m.map_dataframe(draw_heatmap, r"$\lambda$", r"$\mu$", "loss")
 
 m.fig.subplots_adjust(top=0.9)
-m.fig.suptitle("MLE")
+m.fig.suptitle("Regularized NCFA")
 
 m.figure.tight_layout()
 
 
-## LSE
-lse_df = plot_data[plot_data["method"] == "lse"]
-
-sfd_df = pd.DataFrame(lse_df).rename(columns={"sfd": "loss"})
-sfd_df["loss type"] = "sfd"
-
-l2_df = pd.DataFrame(lse_df).rename(columns={"$l_2$": "loss"})
-l2_df["loss type"] = "$l_2$"
-
-lse_df = pd.concat([sfd_df, l2_df])
-
-l = sns.FacetGrid(lse_df, row="Graph", col="loss type", margin_titles=True)
-l.map_dataframe(draw_heatmap, r"$\lambda$", r"$\mu$", "loss")
-
-l.fig.subplots_adjust(top=0.9)
-l.fig.suptitle("LSE")
-
-l.figure.tight_layout()
-
 # output
-# output
-m.figure.savefig(snakemake.output["mle"])
-l.figure.savefig(snakemake.output["lse"])
+m.figure.savefig(snakemake.output[0])

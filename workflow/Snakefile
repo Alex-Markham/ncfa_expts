@@ -2,7 +2,7 @@ import numpy as np
 
 # hyperparam_grid = np.linspace(0.0, 0.2, 20).round(2)
 # hyperparam_grid = np.linspace(0.01, 2.0, 20).round(2)
-hyperparam_grid = np.linspace(0.0, 0.2, 2).round(2)
+hyperparam_grid = np.linspace(0.0, 0.2, 5).round(2)
 
 rule all:
     input:
@@ -61,7 +61,7 @@ rule fit_and_eval_ncfa:
         true_biadj=rules.true_biadj.output,
     output:
         biadj="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv",  # change to json file?
-        validation="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
+        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -71,7 +71,7 @@ rule fit_and_eval_ncfa:
 rule eval_csv:
     input:
         expand(
-            (rules.fit_and_eval_ncfa.output.validation),
+            (rules.fit_and_eval_ncfa.output.eval),
             idx=[3],
             seed=[0],
             n=[5000],

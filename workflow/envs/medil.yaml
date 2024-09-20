@@ -2,5 +2,5 @@ name: medil
 dependencies:
   - pip
   - pip:
-    # - -e "/home/alex/project/medil/."
-    -  'git+https://gitlab.com/alex-markham/medil@develop'
+    # - -e "/home/alex/project/medil/"
+    - 'git+https://gitlab.com/alex-markham/medil@develop#egg=medil'
