@@ -8,7 +8,7 @@ import torch
 
 # input
 k = 10
-threshold = 0.5
+# threshold = 0.5 # using auto-thresh instead
 dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
 true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
 if len(true_biadj.shape) == 1:
@@ -36,9 +36,12 @@ ncfa.fit(dataset, no_split)
 
 biadj = ncfa.parameters.weights
 
-# figure out threshold or auto-threshold for SFD
-biadj_zero_pattern = (np.abs(biadj) > threshold).astype(int)
-sfd_value, ushd_value = sfd(biadj_zero_pattern, true_biadj)
+# auto-threshold for SFD
+min_sfd = 9999
+for thresh in np.linspace(np.abs(biadj).min(), np.abs(biadj).max(), 20):
+    biadj_zero_pattern = (np.abs(biadj) > thresh).astype(int)
+    sfd_value, ushd_value = sfd(biadj_zero_pattern, true_biadj)
+    min_sfd = min([min_sfd, sfd_value])
 
 kf = KFold(
     n_splits=k,
@@ -60,7 +63,7 @@ eval_df = pd.DataFrame(
     {
         "elbo cross validation": cv_losses.mean(),
         "recon loss": ncfa.loss["recon_train"][-1],
-        "sfd": [sfd_value],
+        "sfd": [min_sfd],
         "Graph": [snakemake.wildcards["idx"]],
         r"$\lambda$": [llambda],
         r"$\mu$": [mu],

@@ -2,7 +2,7 @@ import numpy as np
 
 # hyperparam_grid = np.linspace(0.0, 0.2, 20).round(2)
 # hyperparam_grid = np.linspace(0.01, 2.0, 20).round(2)
-hyperparam_grid = np.linspace(0.0, 0.2, 2).round(2)
+hyperparam_grid = np.linspace(0.0, 0.2, 15).round(2)
 
 rule all:
     input:
