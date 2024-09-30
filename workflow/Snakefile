@@ -37,7 +37,7 @@ rule gp_data:
     output:
         dataset="results/gp_datasets/graph={idx}/seed={seed}/n={n}_dataset.csv",
     conda:
-        "envs/medil.yaml"
+        "envs/gp.yaml"
     script:
         "scripts/gp_data.py"
 

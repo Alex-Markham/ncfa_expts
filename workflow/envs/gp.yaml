@@ -1,0 +1,6 @@
+name: medl
+dependencies:
+  - pip
+  - pip:
+      - gcastle
+      - networkx==2.8.8

@@ -3,5 +3,3 @@ dependencies:
   - pip
   - pip:
     - 'git+https://gitlab.com/alex-markham/medil@develop'
-    - gcastle
-    - networkx=2.8.8
