@@ -4,14 +4,21 @@ import numpy as np
 # hyperparam_grid = np.linspace(0.01, 2.0, 20).round(2)
 hyperparam_grid = np.linspace(0.0, 0.2, 2).round(2)
 
+configfile: "envs/config.yaml"
+
 rule all:
     input:
+        "results/sfd_boxplot.png",
         "results/heatmap.pdf"
-
 
 rule true_biadj:
     output:
         biadj="results/true_udgs/biadj_{idx}.csv",
+    params:
+        sparsity=lambda wildcards: config.get("sparsities", {}).get(wildcards.idx, 0.5),
+        n_latent=lambda wildcards: config.get("n_latent", {}).get(wildcards.idx, 3),
+        n_observed=lambda wildcards: config.get("n_observed", {}).get(wildcards.idx, 5),
+        seed=lambda wildcards: int(wildcards.idx) + 42
     conda:
         "envs/basic_ml.yaml"
     script:
@@ -95,3 +102,27 @@ rule heatmap:
         "envs/plot.yaml"
     script:
         "scripts/heatmap.py"
+
+
+rule create_boxplot:
+    input:
+        sfd_files=expand("results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv",
+                         idx=config["graph_indices"],
+                         seed=config["seeds"],
+                         n=config["sample_sizes"],
+                         lambda_=config["lambda_values"],
+                         mu=config["mu_values"])
+    output:
+        "results/sfd_boxplot.png"
+    script:
+        "scripts/boxplot.py"
+
+
+rule calculate_metrics:
+    input:
+        true_graph="results/true_udgs/biadj_{idx}.csv",
+        est_graph="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={lambda_}_mu={mu}_biadj.csv"
+    output:
+        "results/metrics/metrics_{idx}_{seed}_{n}_{lambda_}_{mu}.csv"
+    script:
+        "scripts/calculate_sfd.py"
