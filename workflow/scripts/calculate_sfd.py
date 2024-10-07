@@ -53,19 +53,19 @@ def main(true_graph_file, est_graph_file, output_file):
     print(f"True graph shape: {true_graph.shape}")
     print(f"Estimated graph shape: {est_graph.shape}")
 
-    # make sure the graphs have the same shape
-    if true_graph.shape != est_graph.shape:
-        max_rows = max(true_graph.shape[0], est_graph.shape[0])
-        max_cols = max(true_graph.shape[1], est_graph.shape[1])
-        
-        true_graph_padded = np.zeros((max_rows, max_cols))
-        true_graph_padded[:true_graph.shape[0], :true_graph.shape[1]] = true_graph
-        
-        est_graph_padded = np.zeros((max_rows, max_cols))
-        est_graph_padded[:est_graph.shape[0], :est_graph.shape[1]] = est_graph
-        
-        true_graph = true_graph_padded
-        est_graph = est_graph_padded
+    # raise an error if the number of columns in the true and estimated graphs are not the same "M"
+    if true_graph.shape[1] != est_graph.shape[1]:
+        raise ValueError("The number of columns in true and estimated graphs must be the same.")
+
+    # Pad the true graph with zeros to match the number of rows in the estimated graph, ensures that the true graph is always of size M x M
+    if true_graph.shape[0] < est_graph.shape[0]:
+        padding = np.zeros((est_graph.shape[0] - true_graph.shape[0], true_graph.shape[1]), dtype=true_graph.dtype)
+        true_graph = np.vstack((true_graph, padding))
+    elif true_graph.shape[0] > est_graph.shape[0]:
+        true_graph = true_graph[:est_graph.shape[0], :]
+
+    # print the shapes of the true graphs after padding
+    print(f"Adjusted true graph shape: {true_graph.shape}")
 
     sfd_value, ushd_value = sfd(est_graph, true_graph)
 

@@ -123,6 +123,6 @@ rule calculate_metrics:
         true_graph="results/true_udgs/biadj_{idx}.csv",
         est_graph="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={lambda_}_mu={mu}_biadj.csv"
     output:
-        "results/metrics/metrics_{idx}_{seed}_{n}_{lambda_}_{mu}.csv"
+        "results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv"
     script:
         "scripts/calculate_sfd.py"
