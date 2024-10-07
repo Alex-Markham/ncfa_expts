@@ -4,12 +4,12 @@ import numpy as np
 # hyperparam_grid = np.linspace(0.01, 2.0, 20).round(2)
 hyperparam_grid = np.linspace(0.0, 0.2, 2).round(2)
 
-configfile: "envs/config.yaml"
+configfile: "config.yaml"
 
 rule all:
     input:
         "results/sfd_boxplot.png",
-        "results/heatmap.pdf"
+        # "results/heatmap.pdf"
 
 rule true_biadj:
     output:
