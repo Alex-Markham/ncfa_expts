@@ -4,7 +4,7 @@ import numpy as np
 # hyperparam_grid = np.linspace(0.01, 2.0, 20).round(2)
 hyperparam_grid = np.linspace(0.0, 0.2, 2).round(2)
 
-configfile: "config.yaml"
+configfile: "../config.yaml"
 
 rule all:
     input:
@@ -62,23 +62,59 @@ rule generate_data:
         "scripts/generate_data.py"
 
 
-rule fit_and_eval_ncfa:
+rule fit_ncfa:
     input:
-        dataset=rules.generate_data.output,
-        true_biadj=rules.true_biadj.output,
+        dataset = rules.generate_data.output,
+        true_biadj = rules.true_biadj.output
     output:
-        biadj="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv",  # change to json file?
-        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
+        biadj = "results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv"
     conda:
         "envs/medil.yaml"
     script:
         "scripts/fit_ncfa.py"
 
+# Rule for cross-validation
+rule cross_validate_ncfa:
+    input:
+        dataset = rules.generate_data.output,
+        biadj = rules.fit_ncfa.output.biadj
+    output:
+        cv_results = "results/cv/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_cv_results.csv"
+    conda:
+        "envs/medil.yaml"
+    script:
+        "scripts/cross_validate_ncfa.py"
+
+# Rule for computing SFD and other losses
+rule compute_losses:
+    input:
+        true_biadj = rules.true_biadj.output,
+        est_biadj = rules.fit_ncfa.output.biadj,
+        cv_results = rules.cross_validate_ncfa.output.cv_results
+    output:
+        eval = "results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv"
+    conda:
+        "envs/medil.yaml"
+    script:
+        "scripts/compute_loss.py"
+
+
+#rule fit_and_eval_ncfa:
+#    input:
+#        dataset=rules.generate_data.output,
+#        true_biadj=rules.true_biadj.output,
+#    output:
+#        biadj="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv",  # change to json file?
+#        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
+#    conda:
+#        "envs/medil.yaml"
+#    script:
+#        "scripts/fit_ncfa.py"
 
 rule eval_csv:
     input:
         expand(
-            (rules.fit_and_eval_ncfa.output.eval),
+            (rules.compute_losses.output.eval),
             idx=[3],
             seed=[0],
             n=[5000],
