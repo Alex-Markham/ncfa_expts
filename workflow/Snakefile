@@ -1,24 +1,14 @@
 import numpy as np
 
 
-hyperparam_grid = np.linspace(0.0, 0.1, 3).round(2)
+hyperparam_grid = np.linspace(0.0, 0.1, 2).round(2)
 
 pattern_ground_truth = "benchmark={benchmark}/density={density}/num_latent={num_latent}/num_meas={num_meas}/seed={seed}/"
 pattern_dataset = "data_type={data_type}/" + pattern_ground_truth + "n={n}/"
 
 rule all:
     input:
-        expand(("results/est_params/alg=ncfa/" + pattern_dataset + 'selected_hyperparams.csv'),
-            benchmark=['3'],
-            density=[0],
-            num_latent=[0],
-            num_meas=[0],
-            seed=[0],
-            data_type=['gaussian'],
-            n=[100],
-            llambda=hyperparam_grid,
-            mu=hyperparam_grid,
-        )
+        "results/handpicked_boxplot.csv"
         # "results/sfd_boxplot.png",
         # "results/heatmap.pdf"
 
@@ -83,7 +73,7 @@ rule cross_validate_ncfa:
     input:
         dataset = "results/datasets/" + pattern_dataset + "dataset.csv",
     output:
-        avg_cv_loss = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/avg_cv_loss.txt"
+        avg_cv_loss = "results/eval/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/avg_cv_loss.txt"
     conda:
         "envs/medil.yaml"
     script:
@@ -92,14 +82,49 @@ rule cross_validate_ncfa:
 
 rule model_selection_ncfa:
     input:
-        expand((rules.cross_validate_ncfa.output), llambda=hyperparam_grid, mu=hyperparam_grid, allow_missing=True)
+        cv_loss = expand((rules.cross_validate_ncfa.output), llambda=hyperparam_grid, mu=hyperparam_grid, allow_missing=True),
+        pooled_biadj_weights = expand((rules.fit_ncfa.output.pooled_biadj_weights), llambda=hyperparam_grid, mu=hyperparam_grid, allow_missing=True)
     output:
-        cv_losses = "results/est_params/alg=ncfa/" + pattern_dataset + 'cv_losses.csv',
-        selected_hyperparams = "results/est_params/alg=ncfa/" + pattern_dataset + 'selected_hyperparams.csv'
+        cv_losses = "results/eval/alg=ncfa/" + pattern_dataset + 'cv_losses.csv',
+        selected_hyperparams = "results/est_params/alg=ncfa/" + pattern_dataset + 'selected_hyperparams.csv',
+        selected_biadj_weights = "results/est_params/alg=ncfa/" + pattern_dataset + 'selected_biadj_weights.csv'
     conda:
         "envs/plot.yaml"
     script:
         "scripts/model_select_ncfa.py"
+
+
+rule sfd_cross_validated:
+    input:
+        est_biadj_weights = rules.model_selection_ncfa.output.selected_biadj_weights,
+        true_biadj = rules.true_biadj.output.biadj
+    output:
+        sfd = "results/eval/alg=ncfa/" + pattern_dataset + "sfd.csv"
+    conda:
+        "envs/medil.yaml"
+    script:
+        "scripts/sfd_cross_validated.py"
+
+
+rule handpicked_boxplot_csv:
+    input:
+        expand((rules.sfd_cross_validated.output),
+            benchmark=["0", '3'],
+            density=[0],
+            num_latent=[0],
+            num_meas=[0],
+            seed=[0, 1],
+            data_type=['gaussian'],
+            n=[100],
+            llambda=hyperparam_grid,
+            mu=hyperparam_grid,
+        )
+    output:
+        "results/handpicked_boxplot.csv",
+    conda:
+        "envs/plot.yaml"
+    script:
+        "scripts/join_csv.py"
 
 
 rule compute_losses:
@@ -112,19 +137,6 @@ rule compute_losses:
         "envs/medil.yaml"
     script:
         "scripts/compute_loss.py"
-
-
-#rule fit_and_eval_ncfa:
-#    input:
-#        dataset=rules.generate_data.output,
-#        true_biadj=rules.true_biadj.output,
-#    output:
-#        biadj="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv",  # change to json file?
-#        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
-#    conda:
-#        "envs/medil.yaml"
-#    script:
-#        "scripts/fit_ncfa.py"
 
 
 rule eval_csv:
