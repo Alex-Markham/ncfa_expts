@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from castle.datasets.simulator import IIDSimulation
+from castle.datasets.simulator import IIDSimulation, set_random_seed
 
 
 def biadj_to_adj(biadj):
@@ -10,35 +10,23 @@ def biadj_to_adj(biadj):
     return adj
 
 
-biadj_path = snakemake.input.biadj[0]
+biadj_weights_path = snakemake.input.weights
 
-# biadj_file = snakemake.input.biadj
-
-output_file = snakemake.output.dataset
-n_samples = int(snakemake.wildcards.n)
+num_samps = int(snakemake.wildcards.n)
 seed = int(snakemake.wildcards.seed)
 
-biadj_mat = pd.read_csv(biadj_path, index_col=0).values.astype(bool)
-adj_matrix = biadj_to_adj(biadj_mat)
-
-rng = np.random.default_rng(seed=seed)
-num_edges = int(biadj_mat.sum())
-weights = (rng.random(num_edges) * 1.5) + 0.5
-sign_choices = rng.choice([True, False], size=num_edges)
-weights[sign_choices] *= -1
-
-biadj_weights = np.zeros_like(biadj_mat, dtype=float)
-biadj_weights[biadj_mat] = weights
-adj_matrix_weighted = biadj_to_adj(biadj_weights)
+biadj_weights = pd.read_csv(biadj_weights_path).values
+adj_weights = biadj_to_adj(biadj_weights)
 
 # gp sampling
+set_random_seed(seed)
 sim_gp = IIDSimulation(
-    W=adj_matrix_weighted,
-    n=n_samples,
+    W=adj_weights,
+    n=num_samps,
     method="nonlinear",
     sem_type="gp",
     noise_scale=1.0,
 )
 X_gp = sim_gp.X
 
-pd.DataFrame(X_gp).to_csv(output_file, header=False, index=False)
+pd.DataFrame(X_gp).to_csv(snakemake.output.dataset, header=False, index=False)

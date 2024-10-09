@@ -1,16 +1,21 @@
 import numpy as np
 
+
 pattern_ground_truth = "ground_truth/benchmark={benchmark}/density={density}/num_latent={num_latent}/num_meas={num_meas}/seed={seed}/"
+pattern_dataset = "results/datasets/data_type={data_type}/" + pattern_ground_truth + "n={n}/dataset.csv"
+
 
 rule all:
     input:
         expand(
-            ("results/" + pattern_ground_truth + "weights.csv"),
+            (pattern_dataset),
             benchmark=['random'],
             density=[0.2, 0.3],
             num_latent=[0],
             num_meas=[3,5],
             seed=[0],
+            data_type=['gaussian', 'gp'],
+            n=[100]
         )
         # "results/sfd_boxplot.png",
         # "results/heatmap.pdf"
@@ -37,38 +42,36 @@ rule true_params:
         "scripts/true_params.py"
 
 
-rule gp_data:
-    input:
-        biadj=rules.true_biadj.output,
-    output:
-        dataset="results/gp_datasets/graph={idx}/seed={seed}/n={n}_dataset.csv",
-    conda:
-        "envs/gp.yaml"
-    script:
-        "scripts/gp_data.py"
-
 rule gaussian_data:
-
-
-rule generate_data:
     input:
-        weights=rules.true_params.output.weights,  # change to json file with all three
+        weights=rules.true_params.output.weights,
         means=rules.true_params.output.means,
         errors=rules.true_params.output.errors,
     output:
-        dataset="results/datasets/graph={idx}/seed={seed}/n={n}_dataset.csv",
+        dataset="results/datasets/data_type=gaussian/" + pattern_ground_truth + "n={n}/dataset.csv",
     conda:
         "envs/medil.yaml"
     script:
         "scripts/generate_data.py"
 
 
+rule gp_data:
+    input:
+        weights=rules.true_params.output.weights,
+    output:
+        dataset="results/datasets/data_type=gp/" + pattern_ground_truth + "n={n}/dataset.csv",
+    conda:
+        "envs/gp.yaml"
+    script:
+        "scripts/gp_data.py"
+
+
 rule fit_ncfa:
     input:
-        dataset = rules.generate_data.output,
+        dataset = pattern_dataset,
         true_biadj = rules.true_biadj.output
     output:
-        biadj = "results/est_params/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_biadj.csv"
+        biadj = "results/est_params/alg=ncfa" + pattern_ground_truth + "/lambda={llambda}_mu={mu}/biadj.csv"
     conda:
         "envs/medil.yaml"
     script:
@@ -77,7 +80,7 @@ rule fit_ncfa:
 # Rule for cross-validation
 rule cross_validate_ncfa:
     input:
-        dataset = rules.generate_data.output,
+        dataset = pattern_dataset,
         biadj = rules.fit_ncfa.output.biadj
     output:
         cv_results = "results/cv/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_cv_results.csv"
