@@ -7,71 +7,71 @@ llambda = float(snakemake.wildcards["llambda"])
 mu = float(snakemake.wildcards["mu"])
 seed = int(snakemake.wildcards["seed"])
 
-def rng():
-    return np.random.default_rng(seed)
 
 torch.manual_seed(seed)
 torch.use_deterministic_algorithms(True)
 
 # fit to full dataset
-ncfa = NeuroCausalFactorAnalysis()
+ncfa = NeuroCausalFactorAnalysis(seed=seed)
 ncfa.hyperparams["mu"] = mu
 ncfa.hyperparams["lambda"] = llambda
 
 no_split = (range(len(dataset)), [0, 1])
 ncfa.fit(dataset, no_split)
 
-biadj = ncfa.parameters.weights
+pooled_biadj_weights = ncfa.parameters.biadj
 
 # output
-np.savetxt(snakemake.output["biadj"], biadj, delimiter=",")
+np.savetxt(
+    snakemake.output["pooled_biadj_weights"], pooled_biadj_weights, delimiter=","
+)
 
 #####################
 # input
-#k = 10
+# k = 10
 # threshold = 0.5 # using auto-thresh instead
-#dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
-#true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
-#if len(true_biadj.shape) == 1:
+# dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
+# true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
+# if len(true_biadj.shape) == 1:
 #    true_biadj = np.expand_dims(true_biadj, axis=0)
-#llambda = float(snakemake.wildcards["llambda"])
-#mu = float(snakemake.wildcards["mu"])
-#seed = int(snakemake.wildcards["seed"])
+# llambda = float(snakemake.wildcards["llambda"])
+# mu = float(snakemake.wildcards["mu"])
+# seed = int(snakemake.wildcards["seed"])
 
 
-#def rng():
+# def rng():
 #    return np.random.default_rng(seed)
 
 
-#np.random.seed(seed)
-#torch.manual_seed(seed)
-#torch.use_deterministic_algorithms(True)
+# np.random.seed(seed)
+# torch.manual_seed(seed)
+# torch.use_deterministic_algorithms(True)
 
 # fit to full dataset to get sfd and l2
-#ncfa = NeuroCausalFactorAnalysis()
-#ncfa.hyperparams["mu"] = mu
-#ncfa.hyperparams["lambda"] = llambda
+# ncfa = NeuroCausalFactorAnalysis()
+# ncfa.hyperparams["mu"] = mu
+# ncfa.hyperparams["lambda"] = llambda
 
-#no_split = (range(len(dataset)), [0, 1])
-#ncfa.fit(dataset, no_split)
+# no_split = (range(len(dataset)), [0, 1])
+# ncfa.fit(dataset, no_split)
 
-#biadj = ncfa.parameters.weights
+# biadj = ncfa.parameters.weights
 
 # auto-threshold for SFD
-#min_sfd = 9999
-#for thresh in np.linspace(np.abs(biadj).min(), np.abs(biadj).max(), 20):
+# min_sfd = 9999
+# for thresh in np.linspace(np.abs(biadj).min(), np.abs(biadj).max(), 20):
 #    biadj_zero_pattern = (np.abs(biadj) > thresh).astype(int)
 #    sfd_value, ushd_value = sfd(biadj_zero_pattern, true_biadj)
 #    min_sfd = min([min_sfd, sfd_value])
 
-#kf = KFold(
+# kf = KFold(
 #    n_splits=k,
 #    shuffle=True,
 #    random_state=seed,
-#)
+# )
 # k-folds cross validation
-#cv_losses = np.empty(k, float)
-#for idx, split_idcs in enumerate(kf.split(dataset)):
+# cv_losses = np.empty(k, float)
+# for idx, split_idcs in enumerate(kf.split(dataset)):
 #    split_ncfa = NeuroCausalFactorAnalysis()
 #    split_ncfa.hyperparams["mu"] = mu
 #    split_ncfa.hyperparams["lambda"] = llambda
@@ -80,7 +80,7 @@ np.savetxt(snakemake.output["biadj"], biadj, delimiter=",")
 
 
 # output
-#eval_df = pd.DataFrame(
+# eval_df = pd.DataFrame(
 #    {
 #        "elbo cross validation": cv_losses.mean(),
 #        "recon loss": ncfa.loss["recon_train"][-1],
@@ -90,7 +90,7 @@ np.savetxt(snakemake.output["biadj"], biadj, delimiter=",")
 #        r"$\mu$": [mu],
 #        "seed": [seed],
 #    }
-#)
-#eval_df.to_csv(snakemake.output["eval"], index=False)
+# )
+# eval_df.to_csv(snakemake.output["eval"], index=False)
 
-#np.savetxt(snakemake.output["biadj"], biadj, delimiter=",")
+# np.savetxt(snakemake.output["biadj"], biadj, delimiter=",")
