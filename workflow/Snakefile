@@ -11,8 +11,7 @@ rule all:
     input:
         "results/handpicked_boxplot.png",
         "results/random_boxplot.png",
-        # "results/sfd_boxplot.png",
-        # "results/heatmap.pdf"
+        "results/heatmap.csv",
 
 
 rule true_biadj:
@@ -49,7 +48,7 @@ rule gaussian_data:
     conda:
         "envs/medil.yaml"
     script:
-        "scripts/generate_data.py"
+        "scripts/gaussian_data.py"
 
 
 rule gp_data:
@@ -90,7 +89,7 @@ rule cross_validate_ncfa:
     output:
         avg_cv_loss="results/eval/alg=ncfa/"
         f"{pattern_dataset}"
-        "lambda={llambda}_mu={mu}/avg_cv_loss.txt",
+        "lambda={llambda}_mu={mu}/avg_cv_loss.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -203,30 +202,38 @@ rule random_boxplot:
         "scripts/random_boxplot.py"
 
 
-rule compute_losses:
+rule eval_grid:
     input:
         true_biadj=rules.true_biadj.output,
-        est_biadj=rules.fit_ncfa.output.pooled_biadj_weights,
+        est_biadj_weights=rules.fit_ncfa.output.pooled_biadj_weights,
+        losses=rules.fit_ncfa.output.losses,
+        cv_loss=rules.cross_validate_ncfa.output.avg_cv_loss,
     output:
-        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
+        eval="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/eval.csv",
     conda:
         "envs/medil.yaml"
     script:
-        "scripts/compute_loss.py"
+        "scripts/eval_grid.py"
 
 
-rule eval_csv:
+rule heatmap_csv:
     input:
         expand(
-            (rules.compute_losses.output.eval),
-            idx=[3],
+            (rules.eval_grid.output.eval),
+            benchmark=["0", "3"],
+            density=[0],
+            num_latent=[0],
+            num_meas=[0],
             seed=[0],
+            data_type=["gaussian"],
             n=[5000],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),
     output:
-        "results/cross_val.csv",
+        "results/heatmap.csv",
     conda:
         "envs/plot.yaml"
     script:
@@ -235,34 +242,10 @@ rule eval_csv:
 
 rule heatmap:
     input:
-        rules.eval_csv.output,
+        rules.eval_grid.output,
     output:
-        "results/heatmap.pdf",
+        "results/heatmap.png",
     conda:
         "envs/plot.yaml"
     script:
         "scripts/heatmap.py"
-
-
-# rule create_boxplot:
-#     input:
-#         sfd_files=expand("results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv",
-#                          idx=config["graph_indices"],
-#                          seed=config["seeds"],
-#                          n=config["sample_sizes"],
-#                          lambda_=config["lambda_values"],
-#                          mu=config["mu_values"])
-#     output:
-#         "results/sfd_boxplot.png"
-#     script:
-#         "scripts/boxplot.py"
-
-
-rule calculate_metrics:
-    input:
-        true_graph="results/true_udgs/biadj_{idx}.csv",
-        est_graph="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={lambda_}_mu={mu}_biadj.csv",
-    output:
-        "results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv",
-    script:
-        "scripts/calculate_sfd.py"
