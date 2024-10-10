@@ -74,6 +74,32 @@ rule gp_data:
         "scripts/gp_data.py"
 
 
+rule fit_fci:
+    input:
+        dataset=f"results/datasets/{pattern_dataset}dataset.csv",
+    output:
+        est_biadj=f"results/est_params/alg=fci/{pattern_dataset}biadj.csv",
+    conda:
+        "envs/causal-learn.yaml"
+    log:
+        f"results/logs/fit_fci/{pattern_dataset}rule.log",
+    script:
+        "scripts/fit_fci.py"
+
+
+rule fit_medil:
+    input:
+        dataset=f"results/datasets/{pattern_dataset}dataset.csv",
+    output:
+        est_biadj=f"results/est_params/alg=medil/{pattern_dataset}biadj.csv",
+    conda:
+        "envs/medil.yaml"
+    log:
+        f"results/logs/fit_medil/{pattern_dataset}rule.log",
+    script:
+        "scripts/fit_medil.py"
+
+
 rule fit_ncfa:
     input:
         dataset=f"results/datasets/{pattern_dataset}dataset.csv",
