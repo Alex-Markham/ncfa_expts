@@ -137,7 +137,7 @@ rule handpicked_boxplot:
     conda:
         "envs/plot.yaml"
     script:
-        "scripts/handpicxed_boxplot.py"
+        "scripts/handpicked_boxplot.py"
 
 
 rule compute_losses:
