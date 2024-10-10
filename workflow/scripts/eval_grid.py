@@ -9,10 +9,11 @@ if len(true_biadj.shape) == 1:
 
 est_biadj_weights = np.loadtxt(str(snakemake.input.est_biadj_weights), delimiter=",")
 
-cv_loss = pd.read_csv(snakemake.input.cv_loss)["avg_cv_loss"]
+cv_loss = pd.read_csv(snakemake.input.cv_loss)["avg_cv_loss"].values
 
 losses = pd.read_csv(snakemake.input.losses)
-end_losses = losses.tail(1)
+end_losses = losses.tail(1).reset_index(drop=True)
+
 
 # auto-threshold for SFD
 min_sfd = 9999
@@ -30,10 +31,11 @@ eval_df = pd.DataFrame(
         "num_samps": [snakemake.wildcards["n"]],
         "mu": [snakemake.wildcards["mu"]],
         "lambda": [snakemake.wildcards["llambda"]],
-        "cv_loss": [cv_loss],
+        "cv_loss": cv_loss,
         "sfd": [min_sfd],
     }
 )
-eval_df = pd.concat([eval_df, end_losses])
+eval_df = pd.concat([eval_df, end_losses], axis=1)
 
-eval_df.to_csv(snakemake.output, index=False)
+
+eval_df.to_csv(snakemake.output[0], index=False)

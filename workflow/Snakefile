@@ -11,7 +11,9 @@ rule all:
     input:
         "results/handpicked_boxplot.png",
         "results/random_boxplot.png",
-        "results/heatmap.csv",
+        "results/heatmap.png",
+    log:
+        "results/logs/all.log",
 
 
 rule true_biadj:
@@ -19,6 +21,8 @@ rule true_biadj:
         biadj=f"results/ground_truth/{pattern_ground_truth}biadj.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/true_biadj/{pattern_ground_truth}rule.log",
     script:
         "scripts/true_biadj.py"
 
@@ -32,6 +36,8 @@ rule true_params:
         means=f"results/ground_truth/{pattern_ground_truth}means.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/true_params/{pattern_ground_truth}rule.log",
     script:
         "scripts/true_params.py"
 
@@ -47,6 +53,8 @@ rule gaussian_data:
         "n={n}/dataset.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/gaussian_data/{pattern_ground_truth}n={{n}}/rule.log",
     script:
         "scripts/gaussian_data.py"
 
@@ -60,6 +68,8 @@ rule gp_data:
         "n={n}/dataset.csv",
     conda:
         "envs/gp.yaml"
+    log:
+        f"results/logs/gp_data/{pattern_ground_truth}n={{n}}/rule.log",
     script:
         "scripts/gp_data.py"
 
@@ -79,6 +89,8 @@ rule fit_ncfa:
         "lambda={llambda}_mu={mu}/losses.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/fit_ncfa/{pattern_dataset}lambda={{llambda}}_mu={{mu}}/rule.log",
     script:
         "scripts/fit_ncfa.py"
 
@@ -92,6 +104,9 @@ rule cross_validate_ncfa:
         "lambda={llambda}_mu={mu}/avg_cv_loss.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/cross_validate_ncfa/{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/rule.log",
     script:
         "scripts/cross_validate_ncfa.py"
 
@@ -120,6 +135,8 @@ rule model_selection_ncfa:
         "selected_biadj_weights.csv",
     conda:
         "envs/plot.yaml"
+    log:
+        f"results/logs/model_selection_ncfa/{pattern_dataset}rule.log",
     script:
         "scripts/model_select_ncfa.py"
 
@@ -132,6 +149,8 @@ rule sfd_cross_validated:
         sfd=f"results/eval/alg=ncfa/{pattern_dataset}sfd.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/sfd_cross_validated/{pattern_dataset}rule.log",
     script:
         "scripts/sfd_cross_validated.py"
 
@@ -144,7 +163,7 @@ rule handpicked_boxplot_csv:
             density=[0],
             num_latent=[0],
             num_meas=[0],
-            seed=[0, 1],
+            seed=[0, 1, 2],
             data_type=["gaussian"],
             n=[100],
             llambda=hyperparam_grid,
@@ -154,6 +173,8 @@ rule handpicked_boxplot_csv:
         "results/handpicked_boxplot.csv",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/handpicked_boxplot_csv.log",
     script:
         "scripts/join_csv.py"
 
@@ -165,6 +186,8 @@ rule handpicked_boxplot:
         "results/handpicked_boxplot.png",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/handpicked_boxplot.log",
     script:
         "scripts/handpicked_boxplot.py"
 
@@ -174,7 +197,7 @@ rule random_boxplot_csv:
         expand(
             (rules.sfd_cross_validated.output),
             benchmark=["random"],
-            density=[0.1, 0.2],
+            density=[0.1, 0.2, 0.3, 0.4],
             num_latent=[0],
             num_meas=[5],
             seed=[0, 1],
@@ -187,6 +210,8 @@ rule random_boxplot_csv:
         "results/random_boxplot.csv",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/random_boxplot_csv.log",
     script:
         "scripts/join_csv.py"
 
@@ -198,6 +223,8 @@ rule random_boxplot:
         "results/random_boxplot.png",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/random_boxplot.log",
     script:
         "scripts/random_boxplot.py"
 
@@ -214,6 +241,8 @@ rule eval_grid:
         "lambda={llambda}_mu={mu}/eval.csv",
     conda:
         "envs/medil.yaml"
+    log:
+        f"results/logs/eval_grid/{pattern_dataset}lambda={{llambda}}_mu={{mu}}/rule.log",
     script:
         "scripts/eval_grid.py"
 
@@ -236,16 +265,20 @@ rule heatmap_csv:
         "results/heatmap.csv",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/heatmap_csv.log",
     script:
         "scripts/join_csv.py"
 
 
 rule heatmap:
     input:
-        rules.eval_grid.output,
+        rules.heatmap_csv.output,
     output:
         "results/heatmap.png",
     conda:
         "envs/plot.yaml"
+    log:
+        "results/logs/heatmap.log",
     script:
         "scripts/heatmap.py"

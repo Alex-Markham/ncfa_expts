@@ -6,17 +6,17 @@ import seaborn as sns
 
 # input
 plot_data = pd.read_csv(snakemake.input[0])
-p1, p2 = plot_data[r"$\mu$"].iloc[0:2]
+p1, p2 = plot_data[r"mu"].iloc[0:2]
 side_length = p2 - p1
 
 
 # heatmap drawer for facetgrid
 def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
-    best_row = data.iloc[data["elbo cross validation"].argmin()]
-    best_mu = best_row[r"$\mu$"]
-    best_lambda = best_row[r"$\lambda$"]
-    data = data.round({r"$\lambda$": 2, r"$\mu$": 2})
+    best_row = data.iloc[data["cv_loss"].argmin()]
+    best_mu = best_row[r"mu"]
+    best_lambda = best_row[r"lambda"]
+    data = data.round({r"lambda": 2, r"mu": 2})
     d = data.pivot(index=args[0], columns=args[1], values=args[2])
     h = sns.heatmap(
         d, cbar=False, square=True, annot=True, annot_kws={"size": 5}, **kwargs
@@ -41,13 +41,24 @@ def draw_heatmap(*args, **kwargs):
 sfd_df = plot_data.rename(columns={"sfd": "loss"})
 sfd_df["loss type"] = "SFD"
 
-l2_df = plot_data.rename(columns={"recon loss": "loss"})
-l2_df["loss type"] = "recon train"
+elbo_train_df = plot_data.rename(columns={"elbo_train": "loss"})
+elbo_train_df["loss type"] = "elbo train"
 
-mle_df = pd.concat([sfd_df, l2_df]).round({r"$\lambda$": 2, r"$\mu$": 2})
+elbo_valid_df = plot_data.rename(columns={"elbo_valid": "loss"})
+elbo_valid_df["loss type"] = "elbo valid"
 
-m = sns.FacetGrid(mle_df, row="Graph", col="loss type", margin_titles=True)
-m.map_dataframe(draw_heatmap, r"$\lambda$", r"$\mu$", "loss")
+recon_train_df = plot_data.rename(columns={"recon_train": "loss"})
+recon_train_df["loss type"] = "recon train"
+
+recon_valid_df = plot_data.rename(columns={"recon_valid": "loss"})
+recon_valid_df["loss type"] = "recon valid"
+
+plot_df = pd.concat(
+    [sfd_df, elbo_train_df, elbo_valid_df, recon_train_df, recon_valid_df]
+).round({r"lambda": 2, r"mu": 2})
+
+m = sns.FacetGrid(plot_df, row="graph", col="loss type", margin_titles=True)
+m.map_dataframe(draw_heatmap, r"lambda", r"mu", "loss")
 
 m.fig.subplots_adjust(top=0.9)
 m.fig.suptitle("Regularized NCFA")
