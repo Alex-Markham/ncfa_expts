@@ -8,7 +8,7 @@ pattern_dataset = "data_type={data_type}/" + pattern_ground_truth + "n={n}/"
 
 rule all:
     input:
-        "results/handpicked_boxplot.csv"
+        "results/handpicked_boxplot.png"
         # "results/sfd_boxplot.png",
         # "results/heatmap.pdf"
 
@@ -62,7 +62,9 @@ rule fit_ncfa:
     input:
         dataset = "results/datasets/" + pattern_dataset + "dataset.csv",
     output:
-        pooled_biadj_weights = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/pooled_biadj_weights.csv"
+        pooled_biadj_weights = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/pooled_biadj_weights.csv",
+        vae = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/vae.pt",
+        losses = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/losses.csv"
     conda:
         "envs/medil.yaml"
     script:
@@ -125,6 +127,17 @@ rule handpicked_boxplot_csv:
         "envs/plot.yaml"
     script:
         "scripts/join_csv.py"
+
+
+rule handpicked_boxplot:
+    input:
+        rules.handpicked_boxplot_csv.output
+    output:
+        "results/handpicked_boxplot.png"
+    conda:
+        "envs/plot.yaml"
+    script:
+        "scripts/handpicxed_boxplot.py"
 
 
 rule compute_losses:
