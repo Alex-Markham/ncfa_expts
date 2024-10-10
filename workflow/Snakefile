@@ -4,18 +4,20 @@ import numpy as np
 hyperparam_grid = np.linspace(0.0, 0.1, 2).round(2)
 
 pattern_ground_truth = "benchmark={benchmark}/density={density}/num_latent={num_latent}/num_meas={num_meas}/seed={seed}/"
-pattern_dataset = "data_type={data_type}/" + pattern_ground_truth + "n={n}/"
+pattern_dataset = f"data_type={{data_type}}/{pattern_ground_truth}n={{n}}/"
+
 
 rule all:
     input:
         "results/handpicked_boxplot.png",
-        "results/random_boxplot.png"
+        "results/random_boxplot.png",
         # "results/sfd_boxplot.png",
         # "results/heatmap.pdf"
 
+
 rule true_biadj:
     output:
-        biadj = "results/ground_truth/" + pattern_ground_truth + "biadj.csv",
+        biadj=f"results/ground_truth/{pattern_ground_truth}biadj.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -26,9 +28,9 @@ rule true_params:
     input:
         biadj=rules.true_biadj.output,
     output:
-        weights="results/ground_truth/" + pattern_ground_truth + "weights.csv",
-        errors="results/ground_truth/" + pattern_ground_truth + "errors.csv",
-        means="results/ground_truth/" + pattern_ground_truth + "means.csv",
+        weights=f"results/ground_truth/{pattern_ground_truth}weights.csv",
+        errors=f"results/ground_truth/{pattern_ground_truth}errors.csv",
+        means=f"results/ground_truth/{pattern_ground_truth}means.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -41,7 +43,9 @@ rule gaussian_data:
         means=rules.true_params.output.means,
         errors=rules.true_params.output.errors,
     output:
-        dataset="results/datasets/data_type=gaussian/" + pattern_ground_truth + "n={n}/dataset.csv",
+        dataset="results/datasets/data_type=gaussian/"
+        f"{pattern_ground_truth}"
+        "n={n}/dataset.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -52,7 +56,9 @@ rule gp_data:
     input:
         weights=rules.true_params.output.weights,
     output:
-        dataset="results/datasets/data_type=gp/" + pattern_ground_truth + "n={n}/dataset.csv",
+        dataset="results/datasets/data_type=gp/"
+        f"{pattern_ground_truth}"
+        "n={n}/dataset.csv",
     conda:
         "envs/gp.yaml"
     script:
@@ -61,11 +67,17 @@ rule gp_data:
 
 rule fit_ncfa:
     input:
-        dataset = "results/datasets/" + pattern_dataset + "dataset.csv",
+        dataset=f"results/datasets/{pattern_dataset}dataset.csv",
     output:
-        pooled_biadj_weights = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/pooled_biadj_weights.csv",
-        vae = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/vae.pt",
-        losses = "results/est_params/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/losses.csv"
+        pooled_biadj_weights="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/pooled_biadj_weights.csv",
+        vae="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/vae.pt",
+        losses="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/losses.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -74,9 +86,11 @@ rule fit_ncfa:
 
 rule cross_validate_ncfa:
     input:
-        dataset = "results/datasets/" + pattern_dataset + "dataset.csv",
+        dataset=f"results/datasets/{pattern_dataset}dataset.csv",
     output:
-        avg_cv_loss = "results/eval/alg=ncfa/" + pattern_dataset + "lambda={llambda}_mu={mu}/avg_cv_loss.txt"
+        avg_cv_loss="results/eval/alg=ncfa/"
+        f"{pattern_dataset}"
+        "lambda={llambda}_mu={mu}/avg_cv_loss.txt",
     conda:
         "envs/medil.yaml"
     script:
@@ -85,12 +99,26 @@ rule cross_validate_ncfa:
 
 rule model_selection_ncfa:
     input:
-        cv_loss = expand((rules.cross_validate_ncfa.output), llambda=hyperparam_grid, mu=hyperparam_grid, allow_missing=True),
-        pooled_biadj_weights = expand((rules.fit_ncfa.output.pooled_biadj_weights), llambda=hyperparam_grid, mu=hyperparam_grid, allow_missing=True)
+        cv_loss=expand(
+            (rules.cross_validate_ncfa.output),
+            llambda=hyperparam_grid,
+            mu=hyperparam_grid,
+            allow_missing=True,
+        ),
+        pooled_biadj_weights=expand(
+            (rules.fit_ncfa.output.pooled_biadj_weights),
+            llambda=hyperparam_grid,
+            mu=hyperparam_grid,
+            allow_missing=True,
+        ),
     output:
-        cv_losses = "results/eval/alg=ncfa/" + pattern_dataset + 'cv_losses.csv',
-        selected_hyperparams = "results/est_params/alg=ncfa/" + pattern_dataset + 'selected_hyperparams.csv',
-        selected_biadj_weights = "results/est_params/alg=ncfa/" + pattern_dataset + 'selected_biadj_weights.csv'
+        cv_losses=f"results/eval/alg=ncfa/{pattern_dataset}cv_losses.csv",
+        selected_hyperparams="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "selected_hyperparams.csv",
+        selected_biadj_weights="results/est_params/alg=ncfa/"
+        f"{pattern_dataset}"
+        "selected_biadj_weights.csv",
     conda:
         "envs/plot.yaml"
     script:
@@ -99,10 +127,10 @@ rule model_selection_ncfa:
 
 rule sfd_cross_validated:
     input:
-        est_biadj_weights = rules.model_selection_ncfa.output.selected_biadj_weights,
-        true_biadj = rules.true_biadj.output.biadj
+        est_biadj_weights=rules.model_selection_ncfa.output.selected_biadj_weights,
+        true_biadj=rules.true_biadj.output.biadj,
     output:
-        sfd = "results/eval/alg=ncfa/" + pattern_dataset + "sfd.csv"
+        sfd=f"results/eval/alg=ncfa/{pattern_dataset}sfd.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -111,17 +139,18 @@ rule sfd_cross_validated:
 
 rule handpicked_boxplot_csv:
     input:
-        expand((rules.sfd_cross_validated.output),
-            benchmark=["0", '3'],
+        expand(
+            (rules.sfd_cross_validated.output),
+            benchmark=["0", "3", "4"],
             density=[0],
             num_latent=[0],
             num_meas=[0],
             seed=[0, 1],
-            data_type=['gaussian'],
+            data_type=["gaussian"],
             n=[100],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
-        )
+        ),
     output:
         "results/handpicked_boxplot.csv",
     conda:
@@ -132,9 +161,9 @@ rule handpicked_boxplot_csv:
 
 rule handpicked_boxplot:
     input:
-        rules.handpicked_boxplot_csv.output
+        rules.handpicked_boxplot_csv.output,
     output:
-        "results/handpicked_boxplot.png"
+        "results/handpicked_boxplot.png",
     conda:
         "envs/plot.yaml"
     script:
@@ -143,17 +172,18 @@ rule handpicked_boxplot:
 
 rule random_boxplot_csv:
     input:
-        expand((rules.sfd_cross_validated.output),
+        expand(
+            (rules.sfd_cross_validated.output),
             benchmark=["random"],
             density=[0.1, 0.2],
             num_latent=[0],
             num_meas=[5],
             seed=[0, 1],
-            data_type=['gaussian'],
+            data_type=["gaussian"],
             n=[100],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
-        )
+        ),
     output:
         "results/random_boxplot.csv",
     conda:
@@ -164,9 +194,9 @@ rule random_boxplot_csv:
 
 rule random_boxplot:
     input:
-        rules.random_boxplot_csv.output
+        rules.random_boxplot_csv.output,
     output:
-        "results/random_boxplot.png"
+        "results/random_boxplot.png",
     conda:
         "envs/plot.yaml"
     script:
@@ -175,10 +205,10 @@ rule random_boxplot:
 
 rule compute_losses:
     input:
-        true_biadj = rules.true_biadj.output,
-        est_biadj = rules.fit_ncfa.output.pooled_biadj_weights,
+        true_biadj=rules.true_biadj.output,
+        est_biadj=rules.fit_ncfa.output.pooled_biadj_weights,
     output:
-        eval = "results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv"
+        eval="results/eval/graph={idx}_seed={seed}_n={n}/lambda={llambda}_mu={mu}_validation.csv",
     conda:
         "envs/medil.yaml"
     script:
@@ -231,8 +261,8 @@ rule heatmap:
 rule calculate_metrics:
     input:
         true_graph="results/true_udgs/biadj_{idx}.csv",
-        est_graph="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={lambda_}_mu={mu}_biadj.csv"
+        est_graph="results/est_params/graph={idx}_seed={seed}_n={n}/lambda={lambda_}_mu={mu}_biadj.csv",
     output:
-        "results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv"
+        "results/sfd/sfd_{idx}_{seed}_{n}_{lambda_}_{mu}.csv",
     script:
         "scripts/calculate_sfd.py"
