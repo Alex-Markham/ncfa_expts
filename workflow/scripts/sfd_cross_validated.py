@@ -23,6 +23,7 @@ sfd_df = pd.DataFrame(
     {
         "sfd": [min_sfd],
         "Graph": [snakemake.wildcards["benchmark"]],
+        "density": [snakemake.wildcards["density"]],
         "seed": [snakemake.wildcards["seed"]],
         "num_samps": [snakemake.wildcards["n"]],
     }

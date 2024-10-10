@@ -8,7 +8,8 @@ pattern_dataset = "data_type={data_type}/" + pattern_ground_truth + "n={n}/"
 
 rule all:
     input:
-        "results/handpicked_boxplot.png"
+        "results/handpicked_boxplot.png",
+        "results/random_boxplot.png"
         # "results/sfd_boxplot.png",
         # "results/heatmap.pdf"
 
@@ -138,6 +139,38 @@ rule handpicked_boxplot:
         "envs/plot.yaml"
     script:
         "scripts/handpicked_boxplot.py"
+
+
+rule random_boxplot_csv:
+    input:
+        expand((rules.sfd_cross_validated.output),
+            benchmark=["random"],
+            density=[0.1, 0.2],
+            num_latent=[0],
+            num_meas=[5],
+            seed=[0, 1],
+            data_type=['gaussian'],
+            n=[100],
+            llambda=hyperparam_grid,
+            mu=hyperparam_grid,
+        )
+    output:
+        "results/random_boxplot.csv",
+    conda:
+        "envs/plot.yaml"
+    script:
+        "scripts/join_csv.py"
+
+
+rule random_boxplot:
+    input:
+        rules.random_boxplot_csv.output
+    output:
+        "results/random_boxplot.png"
+    conda:
+        "envs/plot.yaml"
+    script:
+        "scripts/random_boxplot.py"
 
 
 rule compute_losses:
