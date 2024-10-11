@@ -1,5 +1,0 @@
-name: medil
-dependencies:
-  - pip
-  - pip:
-    - causal-learn
