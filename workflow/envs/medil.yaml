@@ -1,5 +1,8 @@
 name: medil
 dependencies:
+  - python==3.12
+  - pytorch
   - pip
   - pip:
     - 'git+https://gitlab.com/alex-markham/medil@develop'
+    - causal-learn
