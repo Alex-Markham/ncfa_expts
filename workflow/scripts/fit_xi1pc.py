@@ -1,32 +1,31 @@
+from medil.ecc_algorithms import find_heuristic_1pc
 from medil.evaluate import sfd
+from medil.independence_testing import estimate_UDG
 import numpy as np
 import pandas as pd
 
 
+dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
 true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
 if len(true_biadj.shape) == 1:
     true_biadj = np.expand_dims(true_biadj, axis=0)
 
-est_biadj_weights = np.loadtxt(str(snakemake.input.est_biadj_weights), delimiter=",")
+udg, p_vals = estimate_UDG(dataset, method="xicor", significance_level=0.05)
+est_biadj = find_heuristic_1pc(udg)
 
-# auto-threshold for SFD
-min_sfd = 9999
-for thresh in np.linspace(
-    np.abs(est_biadj_weights).min(), np.abs(est_biadj_weights).max(), 20
-):
-    biadj_zero_pattern = (np.abs(est_biadj_weights) > thresh).astype(int)
-    sfd_value, _ = sfd(biadj_zero_pattern, true_biadj)
-    min_sfd = min([min_sfd, sfd_value])
-
-# output
+sfd_value, _ = sfd(est_biadj, true_biadj)
 sfd_df = pd.DataFrame(
     {
-        "alg": ["ncfa"],
-        "sfd": [min_sfd],
+        "alg": ["xi1pc"],
+        "sfd": [sfd_value],
         "Graph": [snakemake.wildcards["benchmark"]],
         "density": [snakemake.wildcards["density"]],
         "seed": [snakemake.wildcards["seed"]],
         "num_samps": [snakemake.wildcards["n"]],
     }
 )
+
+
+# output
+np.savetxt(snakemake.output["est_biadj"], est_biadj, delimiter=",")
 sfd_df.to_csv(snakemake.output["sfd"], index=False)

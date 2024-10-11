@@ -87,17 +87,19 @@ rule fit_fci:
         "scripts/fit_fci.py"
 
 
-rule fit_medil:
+rule fit_xi1pc:
     input:
         dataset=f"results/datasets/{pattern_dataset}dataset.csv",
+        true_biadj=rules.true_biadj.output.biadj,
     output:
-        est_biadj=f"results/est_params/alg=medil/{pattern_dataset}biadj.csv",
+        est_biadj=f"results/est_params/alg=xi1pc/{pattern_dataset}biadj.csv",
+        sfd=f"results/eval/alg=xi1pc/{pattern_dataset}biadj.csv",
     conda:
         "envs/medil.yaml"
     log:
-        f"results/logs/fit_medil/{pattern_dataset}rule.log",
+        f"results/logs/fit_xi1pc/{pattern_dataset}rule.log",
     script:
-        "scripts/fit_medil.py"
+        "scripts/fit_xi1pc.py"
 
 
 rule fit_ncfa:
@@ -183,7 +185,7 @@ rule sfd_cross_validated:
 
 rule handpicked_boxplot_csv:
     input:
-        expand(
+        ncfa=expand(
             (rules.sfd_cross_validated.output),
             benchmark=["0", "3", "4"],
             density=[0],
@@ -194,6 +196,17 @@ rule handpicked_boxplot_csv:
             n=[100],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
+        ),
+        others=expand(
+            (f"results/eval/alg={{alg}}/{pattern_dataset}biadj.csv"),
+            alg=["xi1pc"],
+            benchmark=["0", "3", "4"],
+            density=[0],
+            num_latent=[0],
+            num_meas=[0],
+            seed=[0, 1, 2],
+            data_type=["gaussian"],
+            n=[100],
         ),
     output:
         "results/handpicked_boxplot.csv",
