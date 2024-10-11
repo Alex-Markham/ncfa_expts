@@ -2,4 +2,4 @@ name: medil
 dependencies:
   - pip
   - pip:
-    - causallearn
+    - causal-learn

@@ -1,15 +1,21 @@
 from causallearn.search.ConstraintBased.FCI import fci
 from causallearn.utils.cit import kci
-from causallearn.utils.GraphUtils import GraphUtils
+from medil.evaluate import sfd
 import numpy as np
+import pandas as pd
 
 
 # Load the dataset
-data = np.loadtxt(dataset_path, delimiter=",")
+dataset = np.loadtxt(str(snakemake.input.dataset), delimiter=",")
+
+# load true biadj for comparison
+true_biadj = np.loadtxt(str(snakemake.input.true_biadj), dtype="bool", delimiter=",")
+if len(true_biadj.shape) == 1:
+    true_biadj = np.expand_dims(true_biadj, axis=0)
 
 # Run FCI algorithm
 g, edges = fci(
-    data,
+    dataset,
     kci,
     alpha=0.05,
     depth=-1,
@@ -18,31 +24,32 @@ g, edges = fci(
 )
 
 # Get the adjacency matrix
-adj_matrix = g.graph.graph
+adj = g.graph
+if len(adj.shape) == 1:
+    adj = np.expand_dims(adj, axis=0)
 
-# Save the output, adjacency matrix
-np.savetxt(output_path, adj_matrix, delimiter=",")
+# construct biadj
+skel = adj.astype(bool)
+edge_idcs = np.argwhere(np.triu(skel + skel.T))
 
-# Interpret edge properties
-edge_interpretations = []
-for edge in edges:
-    interpretation = f"Edge {edge.get_node1()} - {edge.get_node2()}: "
-    if "nl" in edge.properties:
-        interpretation += "No latent confounder. "
-    else:
-        interpretation += "Possibly latent confounders. "
-    if "dd" in edge.properties:
-        interpretation += "Definitely direct. "
-    elif "pd" in edge.properties:
-        interpretation += "Possibly direct. "
-    else:
-        interpretation += "Not direct. "
+num_latent = len(edge_idcs)
+num_meas = len(skel)
+est_biadj = np.zeros((num_latent, num_meas), bool)
+for latent_idx, edge in enumerate(edge_idcs):
+    est_biadj[latent_idx][edge] = True
 
-    edge_interpretations.append(interpretation)
+sfd_value, _ = sfd(est_biadj, true_biadj)
+sfd_df = pd.DataFrame(
+    {
+        "alg": ["fci"],
+        "sfd": [sfd_value],
+        "Graph": [snakemake.wildcards["benchmark"]],
+        "density": [snakemake.wildcards["density"]],
+        "seed": [snakemake.wildcards["seed"]],
+        "num_samps": [snakemake.wildcards["n"]],
+    }
+)
 
-# Save edge interpretations
-with open("edge_interpretations.txt", "w") as f:
-    for interp in edge_interpretations:
-        f.write(interp + "\n")
-
-# return g, edges, adj_matrix
+# output
+np.savetxt(snakemake.output["est_biadj"], est_biadj, delimiter=",")
+sfd_df.to_csv(snakemake.output["sfd"], index=False)
