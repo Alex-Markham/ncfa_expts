@@ -245,6 +245,17 @@ rule random_boxplot_csv:
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),
+        others=expand(
+            (f"results/eval/alg={{alg}}/{pattern_dataset}biadj.csv"),
+            alg=["xi1pc"],
+            benchmark=["random"],
+            density=[0.1, 0.2, 0.3, 0.4],
+            num_latent=[0],
+            num_meas=[5],
+            seed=[0, 1],
+            data_type=["gaussian"],
+            n=[100],
+        ),
     output:
         "results/random_boxplot.csv",
     conda:
