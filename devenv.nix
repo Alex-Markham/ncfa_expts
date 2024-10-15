@@ -12,7 +12,7 @@
   # https://devenv.sh/languages/
   languages.python.enable = true;
   languages.python.venv.enable = true;
-  languages.python.venv.requirements = ''
+  languages.python.venv.requirements = '' # ./requirements.txt
     snakemake
     https://gitlab.com/alex-markham/medil/-/archive/develop/medil-develop.zip
     causal-learn
