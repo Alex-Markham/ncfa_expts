@@ -11,15 +11,9 @@
 
   # https://devenv.sh/languages/
   languages.python.enable = true;
+  languages.python.version = "3.12";
   languages.python.venv.enable = true;
-  languages.python.venv.requirements = '' # ./requirements.txt
-    snakemake
-    https://gitlab.com/alex-markham/medil/-/archive/develop/medil-develop.zip
-    causal-learn
-    seaborn
-    gcastle
-    networkx==2.8.8
-    '';
+  languages.python.venv.requirements = ./requirements.txt;
 
   # https://devenv.sh/processes/
   # processes.cargo-watch.exec = "cargo-watch";
