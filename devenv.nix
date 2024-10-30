@@ -16,8 +16,6 @@
     snakemake
     https://gitlab.com/alex-markham/medil/-/archive/develop/medil-develop.zip
     causal-learn
-    pandas
-    scikit-learn
     seaborn
     gcastle
     networkx==2.8.8
@@ -35,6 +33,7 @@
   '';
 
   enterShell = ''
+    exec fish
     hello
     git --version
   '';
