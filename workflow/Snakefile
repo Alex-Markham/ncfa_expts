@@ -1,7 +1,7 @@
 import numpy as np
 
 
-hyperparam_grid = np.linspace(0.0, 0.1, 2).round(2)
+hyperparam_grid = np.linspace(0.0, 0.1, 7).round(2)
 
 pattern_ground_truth = "benchmark={benchmark}/density={density}/num_latent={num_latent}/num_meas={num_meas}/seed={seed}/"
 pattern_dataset = f"data_type={{data_type}}/{pattern_ground_truth}n={{n}}/"
@@ -80,7 +80,7 @@ rule fit_fci:
         true_biadj=rules.true_biadj.output.biadj,
     output:
         est_biadj=f"results/est_params/alg=fci/{pattern_dataset}biadj.csv",
-        sfd=f"results/eval/alg=fci/{pattern_dataset}biadj.csv",
+        sfd=f"results/eval/alg=fci/{pattern_dataset}sfd.csv",
     conda:
         "envs/medil.yaml"
     log:
@@ -95,7 +95,8 @@ rule fit_xi1pc:
         true_biadj=rules.true_biadj.output.biadj,
     output:
         est_biadj=f"results/est_params/alg=xi1pc/{pattern_dataset}biadj.csv",
-        sfd=f"results/eval/alg=xi1pc/{pattern_dataset}biadj.csv",
+        sfd=f"results/eval/alg=xi1pc/{pattern_dataset}sfd.csv",
+        shd=f"results/eval/alg=xi1pc/{pattern_dataset}shd.csv",
     conda:
         "envs/medil.yaml"
     log:
@@ -177,6 +178,7 @@ rule sfd_cross_validated:
         true_biadj=rules.true_biadj.output.biadj,
     output:
         sfd=f"results/eval/alg=ncfa/{pattern_dataset}sfd.csv",
+        shd=f"results/eval/alg=ncfa/{pattern_dataset}shd.csv",
     conda:
         "envs/medil.yaml"
     log:
@@ -188,27 +190,27 @@ rule sfd_cross_validated:
 rule handpicked_boxplot_csv:
     input:
         ncfa=expand(
-            (rules.sfd_cross_validated.output),
-            benchmark=["0", "3"],
+            (rules.sfd_cross_validated.output.sfd),
+            benchmark=[str(idx) for idx in range(7)],
             density=[0],
             num_latent=[0],
             num_meas=[0],
-            seed=[0, 1],
+            seed=[idx for idx in range(10)],
             data_type=["gaussian"],
-            n=[1000],
+            n=[10000],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),
         others=expand(
-            (f"results/eval/alg={{alg}}/{pattern_dataset}biadj.csv"),
-            alg=["xi1pc", "fci"],
-            benchmark=["0", "3"],
+            (f"results/eval/alg={{alg}}/{pattern_dataset}sfd.csv"),
+            alg=["xi1pc"],
+            benchmark=[str(idx) for idx in range(7)],
             density=[0],
             num_latent=[0],
             num_meas=[0],
-            seed=[0, 1],
-            data_type=["gaussian"],
-            n=[1000],
+            seed=[idx for idx in range(10)],
+            data_type=["gaussian", "gp"],
+            n=[10000],
         ),
     output:
         "results/handpicked_boxplot.csv",
@@ -236,27 +238,27 @@ rule handpicked_boxplot:
 rule random_boxplot_csv:
     input:
         expand(
-            (rules.sfd_cross_validated.output),
+            (rules.sfd_cross_validated.output.sfd),
             benchmark=["random"],
-            density=[0.1, 0.2],
+            density=[0.1, 0.2, 0.3, 0.5, 0.7, 0.9],
             num_latent=[0],
-            num_meas=[5],
-            seed=[0, 1],
-            data_type=["gaussian"],
-            n=[1000],
+            num_meas=[10],
+            seed=[idx for idx in range(10)],
+            data_type=["gaussian", "gp"],
+            n=[10000],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),
         others=expand(
-            (f"results/eval/alg={{alg}}/{pattern_dataset}biadj.csv"),
-            alg=["xi1pc", "fci"],
+            (f"results/eval/alg={{alg}}/{pattern_dataset}sfd.csv"),
+            alg=["xi1pc"],
             benchmark=["random"],
-            density=[0.1, 0.2],
+            density=[0.1, 0.2, 0.3, 0.5, 0.7, 0.9],
             num_latent=[0],
-            num_meas=[5],
-            seed=[0, 1],
-            data_type=["gaussian"],
-            n=[1000],
+            num_meas=[10],
+            seed=[idx for idx in range(10)],
+            data_type=["gaussian", "gp"],
+            n=[10000],
         ),
     output:
         "results/random_boxplot.csv",
@@ -303,13 +305,13 @@ rule heatmap_csv:
     input:
         expand(
             (rules.eval_grid.output.eval),
-            benchmark=["0", "3"],
+            benchmark=[str(idx) for idx in range(7)],
             density=[0],
             num_latent=[0],
             num_meas=[0],
             seed=[0],
-            data_type=["gaussian"],
-            n=[1000],
+            data_type=["gaussian", "gp"],
+            n=[10000],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),

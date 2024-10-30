@@ -13,11 +13,21 @@ if len(true_biadj.shape) == 1:
 udg, p_vals = estimate_UDG(dataset, method="xicor", significance_level=0.05)
 est_biadj = find_heuristic_1pc(udg)
 
-sfd_value, _ = sfd(est_biadj, true_biadj)
+sfd_value, shd_value = sfd(est_biadj, true_biadj)
 sfd_df = pd.DataFrame(
     {
         "alg": ["xi1pc"],
         "sfd": [sfd_value],
+        "Graph": [snakemake.wildcards["benchmark"]],
+        "density": [snakemake.wildcards["density"]],
+        "seed": [snakemake.wildcards["seed"]],
+        "num_samps": [snakemake.wildcards["n"]],
+    }
+)
+shd_df = pd.DataFrame(
+    {
+        "alg": ["xi1pc"],
+        "shd": [shd_value],
         "Graph": [snakemake.wildcards["benchmark"]],
         "density": [snakemake.wildcards["density"]],
         "seed": [snakemake.wildcards["seed"]],
@@ -29,3 +39,4 @@ sfd_df = pd.DataFrame(
 # output
 np.savetxt(snakemake.output["est_biadj"], est_biadj, delimiter=",")
 sfd_df.to_csv(snakemake.output["sfd"], index=False)
+shd_df.to_csv(snakemake.output["shd"], index=False)
