@@ -1,0 +1,7 @@
+executor: slurm
+jobs: 100
+set-resources:
+    fit_ncfa:
+        slurm_partition: gpu_h100
+    cross_validate_ncfa:
+        slurm_partition: gpu_h100

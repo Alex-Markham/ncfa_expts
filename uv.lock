@@ -578,6 +578,7 @@ dependencies = [
     { name = "networkx" },
     { name = "seaborn" },
     { name = "snakemake" },
+    { name = "snakemake-executor-plugin-slurm" },
 ]
 
 [package.metadata]
@@ -588,6 +589,7 @@ requires-dist = [
     { name = "networkx", specifier = "==2.8.8" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "snakemake", specifier = ">=8.25.0" },
+    { name = "snakemake-executor-plugin-slurm", specifier = ">=0.11.1" },
 ]
 
 [[package]]
@@ -1193,6 +1195,34 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/65/05/fe1fb360c5c8cd506b2bf13f5911b3c3d983f18cd44eb734e78e15fa33c0/snakemake-8.25.0.tar.gz", hash = "sha256:a9cf1ab8e7c33a6e928f191fc83572e8add8d8383465a036910526d01081bddc", size = 4729422 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cd/fe/0a32eac8ffc20c477160c0dde984744ac6c4a42658de50b87af11b213bdc/snakemake-8.25.0-py3-none-any.whl", hash = "sha256:88cf2d2e8454a1be500111a178a71f87834d8dd1c4a69fd3a51e2b926f05de6f", size = 1001107 },
+]
+
+[[package]]
+name = "snakemake-executor-plugin-slurm"
+version = "0.11.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "snakemake-executor-plugin-slurm-jobstep" },
+    { name = "snakemake-interface-common" },
+    { name = "snakemake-interface-executor-plugins" },
+    { name = "throttler" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/ec/71e057ca8aa770915e29eb3c3a18391d1cfcbb7be839ad667e00bebea079/snakemake_executor_plugin_slurm-0.11.1.tar.gz", hash = "sha256:293a951dcf829400bf6197705d6c602faed95aaaae9ad0d661d23b0184074134", size = 9371 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/3b/0ff1f3828a04a815777cb2cdb89747414a1ab89362a6f84cd835d38d4c11/snakemake_executor_plugin_slurm-0.11.1-py3-none-any.whl", hash = "sha256:ae7db161c8af602d68b75cb04af028f279c16d6ab6bc659c7c7ae5860851be83", size = 10211 },
+]
+
+[[package]]
+name = "snakemake-executor-plugin-slurm-jobstep"
+version = "0.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "snakemake-interface-common" },
+    { name = "snakemake-interface-executor-plugins" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/fc/b60302d545e21fbf2f93e2a0d73ed943b679fc648bc8b3dcb97737d5b946/snakemake_executor_plugin_slurm_jobstep-0.2.1.tar.gz", hash = "sha256:58894d52b5998a34fa6f60ec511ff0bfde4a9ec96714bcaa3cd2f46cf8a33859", size = 4379 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/78/46/95a80edc6196f01e20c35a272e2d801b48fd4c9a67aed3e76fb5e2b78603/snakemake_executor_plugin_slurm_jobstep-0.2.1-py3-none-any.whl", hash = "sha256:097a51c8d2d1d40bb5aa4a845bb8c75ca03113d7197c67f047640319661725b3", size = 5052 },
 ]
 
 [[package]]
