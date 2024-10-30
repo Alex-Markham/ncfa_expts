@@ -1,0 +1,16 @@
+* for mercury (and AWS?) check out: https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html
+* instructions on mercury:
+** interecative login to compute node
+** load python module
+** curl install uv
+** `uv venv --python 3.12`
+** `uv pip install <packages>`
+*** snakemake
+*** https://gitlab.com/alex-markham/medil/-/archive/develop/medil-develop.zip
+*** causal-learn
+*** seaborn
+*** gcastle
+*** networkx==2.8.8
+** `uv pip freeze > requirements.txt`
+** `source .venv/bin/activate`
+** snakemake all -n
