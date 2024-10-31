@@ -14,3 +14,9 @@
 ** `uv pip freeze > requirements.txt`
 ** `source .venv/bin/activate`
 ** snakemake all -n
+* useful mercury commands:
+** export TERM=xterm
+** head -32 slurm-*
+** tail -30 slurm-*
+** sbatch ncfa_expts/mercury_test.sh
+** srun --account=pi-naragam --pty bash --login
