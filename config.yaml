@@ -1,5 +1,8 @@
 executor: slurm
 jobs: 100
+default-resources:
+    mem_mb_per_cpu: 2000	# 2 GB
+    runtime: 60			# 1 hour
 set-resources:
     fit_ncfa:
         slurm_partition: gpu_h100
