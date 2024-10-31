@@ -20,3 +20,4 @@
 ** tail -30 slurm-*
 ** sbatch ncfa_expts/mercury_test.sh
 ** srun --account=pi-naragam --pty bash --login
+** squeue --user=amarkha0
