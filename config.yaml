@@ -3,10 +3,10 @@ jobs: 100
 default-resources:
     mem_mb_per_cpu: 2000
     runtime: 60
-set-resources:
-    fit_ncfa:
-        slurm_partition: gpu_h100
-        slurm_extra: "'--gres=gpu:1'"
-    cross_validate_ncfa:
-        slurm_partition: gpu_h100
-        slurm_extra: "'--gres=gpu:1'"
+# set-resources:
+#    fit_ncfa:
+#        slurm_partition: gpu_h100
+#        slurm_extra: "'--gres=gpu:1'"
+#    cross_validate_ncfa:
+#        slurm_partition: gpu_h100
+#        slurm_extra: "'--gres=gpu:1'"

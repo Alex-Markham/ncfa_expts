@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=5-05:00:00
 
-#SBATCH --job-name=snakemake_test
+#SBATCH --job-name=snakemake
 
 module load python/booth/3.12
 cd ~/ncfa_expts/
