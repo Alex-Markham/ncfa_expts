@@ -11,4 +11,4 @@ module load python/booth/3.12
 cd ~/ncfa_expts/
 source .venv/bin/activate
 
-snakemake --profile ./ all
+snakemake --profile ./ all --rerun-incomplete
