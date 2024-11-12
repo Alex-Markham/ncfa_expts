@@ -17,22 +17,26 @@ end_losses = losses.tail(1).reset_index(drop=True)
 
 # auto-threshold for SFD
 min_sfd = 9999
+corresponding_shd = 9999
 for thresh in np.linspace(
     np.abs(est_biadj_weights).min(), np.abs(est_biadj_weights).max(), 20
 ):
     biadj_zero_pattern = (np.abs(est_biadj_weights) > thresh).astype(int)
-    sfd_value, _ = sfd(biadj_zero_pattern, true_biadj)
-    min_sfd = min([min_sfd, sfd_value])
+    sfd_value, shd = sfd(biadj_zero_pattern, true_biadj)
+    if sfd_value < min_sfd:
+        min_sfd = sfd_value
+        corresponding_shd = shd
 
 # output
 eval_df = pd.DataFrame(
     {
         "graph": [snakemake.wildcards["benchmark"]],
         "num_samps": [snakemake.wildcards["n"]],
-        "mu": [snakemake.wildcards["mu"]],
         "lambda": [snakemake.wildcards["llambda"]],
+        "mu": [snakemake.wildcards["mu"]],
         "cv_loss": cv_loss,
         "sfd": [min_sfd],
+        "shd": [corresponding_shd],
     }
 )
 eval_df = pd.concat([eval_df, end_losses], axis=1)
