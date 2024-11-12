@@ -15,18 +15,10 @@ def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
 
     # given best sfd, find best elbo validation
-    sfds = data[data["loss type"] == "SFD"]
-    best_sfds = sfds[sfds["loss"] == sfds["loss"].min()]
-    best_elbo_val, best_lambda, best_mu = np.inf, None, None
-    elbo_vals = data["loss type"] == "elbo_valid"
-    for llambda, mu in best_sfds[["lambda", "mu"]].values:
-        elbo_val = elbo_vals[elbo_vals["lambda"] == llambda & elbo_vals["mu"] == mu][
-            "loss"
-        ]
-        if elbo_val < best_elbo_val:
-            best_elbo_val = elbo_val
-            best_lambda = llambda
-            best_mu = mu
+    best_sfds = data[data["sfd"] == data["sfd"].min()]
+    best_params = best_sfds.iloc[best_sfds['elbo_valid'].argmin()]
+    best_lambda = best_params[r'lambda']
+    best_mu = best_params[r'mu']
 
     # select lowest CV loss
     selected_params = data.iloc[data["cv_loss"].argmin()]
@@ -70,6 +62,7 @@ def draw_heatmap(*args, **kwargs):
 
 ## plot
 sfd_df = plot_data.rename(columns={"sfd": "loss"})
+sfd_df['sfd'] = sfd_df['loss']
 sfd_df["loss type"] = "SFD"
 
 shd_df = plot_data.rename(columns={"shd": "loss"})
@@ -79,6 +72,7 @@ elbo_train_df = plot_data.rename(columns={"elbo_train": "loss"})
 elbo_train_df["loss type"] = "elbo train"
 
 elbo_valid_df = plot_data.rename(columns={"elbo_valid": "loss"})
+elbo_valid_df['elbo_valid'] = elbo_valid_df['loss']
 elbo_valid_df["loss type"] = "elbo valid"
 
 recon_train_df = plot_data.rename(columns={"recon_train": "loss"})
