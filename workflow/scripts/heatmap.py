@@ -26,7 +26,7 @@ def draw_heatmap(*args, **kwargs):
     selected_mu = selected_params[r"mu"]
 
     data = data.round({r"lambda": 2, r"mu": 2})
-    d = data.pivot(index=args[0], columns=args[1], values=args[2])
+    d = data.pivot(columns=args[0], index=args[1], values=args[2])
     h = sns.heatmap(
         d, cbar=False, square=True, annot=True, annot_kws={"size": 5}, **kwargs
     )
