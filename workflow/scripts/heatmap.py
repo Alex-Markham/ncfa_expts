@@ -14,8 +14,8 @@ side_length = p2 - p1
 def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
     best_row = data.iloc[data["cv_loss"].argmin()]
-    best_mu = best_row[r"mu"]
     best_lambda = best_row[r"lambda"]
+    best_mu = best_row[r"mu"]
     data = data.round({r"lambda": 2, r"mu": 2})
     d = data.pivot(index=args[0], columns=args[1], values=args[2])
     h = sns.heatmap(
@@ -23,11 +23,11 @@ def draw_heatmap(*args, **kwargs):
     )
     h.invert_yaxis()
     c = d.columns
-    best_mu_idx = np.argwhere(c == best_mu)[0][0]
     best_lambda_idx = np.argwhere(c == best_lambda)[0][0]
+    best_mu_idx = np.argwhere(c == best_mu)[0][0]
     h.add_patch(
         Rectangle(
-            (best_mu_idx, best_lambda_idx),
+            (best_lambda_idx, best_mu_idx),
             1,
             1,
             fill=False,
