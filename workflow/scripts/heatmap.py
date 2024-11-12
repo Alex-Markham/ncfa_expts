@@ -15,8 +15,9 @@ def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
 
     # given best sfd, find best elbo validation
-    best_sfds = data[data["sfd"] == data["sfd"].min()]
-    best_params = data.iloc[best_sfds["elbo_valid"].argmin()]
+    sfds = data['loss type'] == 'SFD'
+    best_sfds = sfds[sfds["loss"] == sfds["loss"].min()]
+    best_params = best_sfds.iloc[best_sfds["elbo_valid"].argmin()]
     best_lambda = best_params[r"lambda"]
     best_mu = best_params[r"mu"]
 
