@@ -41,6 +41,9 @@ def draw_heatmap(*args, **kwargs):
 sfd_df = plot_data.rename(columns={"sfd": "loss"})
 sfd_df["loss type"] = "SFD"
 
+shd_df = plot_data.rename(columns={"shd": "loss"})
+shd_df["loss type"] = "SHD"
+
 elbo_train_df = plot_data.rename(columns={"elbo_train": "loss"})
 elbo_train_df["loss type"] = "elbo train"
 
@@ -54,7 +57,7 @@ recon_valid_df = plot_data.rename(columns={"recon_valid": "loss"})
 recon_valid_df["loss type"] = "recon valid"
 
 plot_df = pd.concat(
-    [sfd_df, elbo_train_df, elbo_valid_df, recon_train_df, recon_valid_df]
+    [sfd_df, shd_df, elbo_train_df, elbo_valid_df, recon_train_df, recon_valid_df]
 ).round({r"lambda": 2, r"mu": 2})
 
 m = sns.FacetGrid(plot_df, row="graph", col="loss type", margin_titles=True)
