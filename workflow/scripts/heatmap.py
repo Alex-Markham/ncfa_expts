@@ -13,9 +13,18 @@ side_length = p2 - p1
 # heatmap drawer for facetgrid
 def draw_heatmap(*args, **kwargs):
     data = kwargs.pop("data")
-    best_row = data.iloc[data["cv_loss"].argmin()]
-    best_lambda = best_row[r"lambda"]
-    best_mu = best_row[r"mu"]
+
+    # given best sfd, find best elbo validation
+    best_sfds = data[data["sfd"] == data["sfd"].min()]
+    best_params = data.iloc[best_sfds["elbo_valid"].argmin()]
+    best_lambda = best_params[r"lambda"]
+    best_mu = best_params[r"mu"]
+
+    # select lowest CV loss
+    selected_params = data.iloc[data["cv_loss"].argmin()]
+    selected_lambda = selected_params[r"lambda"]
+    selected_mu = selected_params[r"mu"]
+
     data = data.round({r"lambda": 2, r"mu": 2})
     d = data.pivot(index=args[0], columns=args[1], values=args[2])
     h = sns.heatmap(
@@ -23,11 +32,25 @@ def draw_heatmap(*args, **kwargs):
     )
     h.invert_yaxis()
     c = d.columns
+
     best_lambda_idx = np.argwhere(c == best_lambda)[0][0]
     best_mu_idx = np.argwhere(c == best_mu)[0][0]
     h.add_patch(
         Rectangle(
             (best_lambda_idx, best_mu_idx),
+            1,
+            1,
+            fill=False,
+            edgecolor="red",
+            lw=3,
+        )
+    )
+
+    selected_lambda_idx = np.argwhere(c == selected_lambda)[0][0]
+    selected_mu_idx = np.argwhere(c == selected_mu)[0][0]
+    h.add_patch(
+        Rectangle(
+            (selected_lambda_idx, selected_mu_idx),
             1,
             1,
             fill=False,
