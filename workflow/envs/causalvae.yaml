@@ -1,0 +1,11 @@
+name: causalvae
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch
+  - torchvision
+  - numpy
+  - pandas
+  - pip
