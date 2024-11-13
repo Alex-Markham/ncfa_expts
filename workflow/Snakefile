@@ -88,6 +88,24 @@ rule fit_fci:
     script:
         "scripts/fit_fci.py"
 
+rule fit_causalvae:
+    input:
+        dataset=f"results/datasets/{pattern_dataset}dataset.csv"
+    output:
+        biadj="results/est_params/" + pattern_causalvae + "biadj.npy",
+        model="results/est_params/" + pattern_causalvae + "model.pt",
+        intervention_dir=directory("results/est_params/" + pattern_causalvae + "interventions")
+    params:
+        z_dim=causalvae_config["z_dim"],
+        num_epochs=causalvae_config["num_epochs"],
+        lr=causalvae_config["lr"],
+        batch_size=causalvae_config["batch_size"]
+    conda:
+        "envs/causalvae.yaml"
+    log:
+        "results/logs/fit_causalvae/" + pattern_causalvae + "rule.log"
+    script:
+        "scripts/fit_causalvae.py"
 
 rule fit_xi1pc:
     input:
