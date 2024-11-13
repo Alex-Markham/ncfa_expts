@@ -11,7 +11,7 @@ rule all:
     input:
         "results/handpicked_boxplot.png",
         "results/random_boxplot.png",
-        "results/heatmap.png",
+        "results/heatmap_gaussian_0.png",
     log:
         "results/logs/all.log",
 
@@ -309,18 +309,16 @@ rule heatmap_csv:
             density=[0],
             num_latent=[0],
             num_meas=[0],
-            seed=[0],
-            data_type=["gaussian"],
             n=[50000],
             llambda=hyperparam_grid,
             mu=hyperparam_grid,
         ),
     output:
-        "results/heatmap.csv",
+        "results/heatmap_{data_type}_{seed}.csv",
     conda:
         "envs/plot.yaml"
     log:
-        "results/logs/heatmap_csv.log",
+        "results/logs/heatmap_{data_type}_{seed}_csv.log",
     script:
         "scripts/join_csv.py"
 
@@ -329,10 +327,10 @@ rule heatmap:
     input:
         rules.heatmap_csv.output,
     output:
-        "results/heatmap.png",
+        "results/heatmap_{data_type}_{seed}.png",
     conda:
         "envs/plot.yaml"
     log:
-        "results/logs/heatmap.log",
+        "results/logs/heatmap_{data_type}_{seed}.log",
     script:
         "scripts/heatmap.py"
