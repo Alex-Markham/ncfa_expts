@@ -48,9 +48,13 @@ rule gaussian_data:
         means=rules.true_params.output.means,
         errors=rules.true_params.output.errors,
     output:
-        dataset="results/datasets/data_type=gaussian/"
+        observational_dataset="results/datasets/data_type=gaussian/"
         f"{pattern_ground_truth}"
         "n={n}/dataset.csv",
+        interventional_datasets=expand(
+            "results/datasets/data_type=gaussian/{pattern_ground_truth}n={n}/dataset_int{latent}.csv",
+            latent=range(num_latents)
+        ),
     conda:
         "envs/medil.yaml"
     log:
