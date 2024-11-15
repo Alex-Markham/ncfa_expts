@@ -67,9 +67,13 @@ rule gp_data:
     input:
         weights=rules.true_params.output.weights,
     output:
-        dataset="results/datasets/data_type=gp/"
+        observational_dataset="results/datasets/data_type=gp/"
         f"{pattern_ground_truth}"
         "n={n}/dataset.csv",
+        interventional_datasets=expand(
+            "results/datasets/data_type=gp/{pattern_ground_truth}n={n}/dataset_int{latent}.csv",
+            latent=range(num_latents)
+        ),
     conda:
         "envs/gp.yaml"
     log:
