@@ -6,6 +6,10 @@ from codebase.models.mask_vae_flow import CausalVAE
 from utils import _h_A, get_batch_unin_dataset_withlabel
 from torchvision.utils import save_image
 import os
+import logging
+
+logging.basicConfig(filename=snakemake.log[0], level=logging.INFO)
+logger = logging.getLogger()
 
 def run_causalvae_discovery(dataset_path, z_dim=16, num_epochs=100, lr=1e-3, batch_size=64):
     # Use GPU if available
@@ -64,49 +68,53 @@ def run_causalvae_discovery(dataset_path, z_dim=16, num_epochs=100, lr=1e-3, bat
         avg_kl = total_kl / len(dataloader)
         avg_rec = total_rec / len(dataloader)
         
-        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}, KL: {avg_kl:.4f}, Rec: {avg_rec:.4f}')
+        logger.info(f'Epoch {epoch+1}/{num_epochs}, Loss: {avg_loss:.4f}, KL: {avg_kl:.4f}, Rec: {avg_rec:.4f}')
     
     # Extract biadjacency matrix from the trained model
     biadj = model.dag.A.detach().cpu().numpy()
     
     # Perform intervention
-    perform_intervention(model, device)
+    perform_intervention(model, device, snakemake.output.intervention_dir)
 
-    return biadj
+    # Save model
+    torch.save(model.state_dict(), snakemake.output.model)
 
+    return model, biadj
 
-def perform_intervention(model, device):
+def perform_intervention(model, device, intervention_dir):
     """
     Perform intervention using the pre-trained model and save the reconstructed images.
     """
-    if not os.path.exists('./figs_test_vae_flow/'): 
-        os.makedirs('./figs_test_vae_flow/')
+    if not os.path.exists(intervention_dir):
+        os.makedirs(intervention_dir)
 
-    # using the flow data for the intervention
     dataset_dir = './causal_data/flow_noise'
     train_dataset = get_batch_unin_dataset_withlabel(dataset_dir, 100, dataset="train")
     
     count = 0
-    print('DAG:{}'.format(model.dag.A))
-    
     for u, l in train_dataset:
         for i in range(4):
             for j in range(-5, 5):
-                # Perform forward pass with intervention (adjustment on variable i)
                 L, kl, rec, reconstructed_image, _ = model.negative_elbo_bound(u.to(device), l.to(device), i, adj=j*0)
-                
-                save_image(reconstructed_image[0], f'figs_test_vae_flow/reconstructed_image_{i}_{count}.png', range=(0, 1))
+                save_image(reconstructed_image[0], f'{intervention_dir}/reconstructed_image_{i}_{count}.png', range=(0, 1))
         
-        # Save the original images for comparison
-        save_image(u[0], f'./figs_test_vae_flow/true_{count}.png') 
+        save_image(u[0], f'{intervention_dir}/true_{count}.png') 
         count += 1
         if count == 10:
             break
 
-biadj = run_causalvae_discovery(
-    dataset_path=dataset_path,  
-    z_dim=16,
-    num_epochs=100,
-    lr=1e-3,
-    batch_size=64
-)
+def main():
+    # Run CausalVAE
+    model, est_biadj = run_causalvae_discovery(
+        dataset_path=snakemake.input.dataset,
+        z_dim=snakemake.params.z_dim,
+        num_epochs=snakemake.params.num_epochs,
+        lr=snakemake.params.lr,
+        batch_size=snakemake.params.batch_size
+    )
+    
+    # Save estimated biadjacency matrix
+    np.save(snakemake.output.est_biadj, est_biadj)
+
+if __name__ == "__main__":
+    main()
